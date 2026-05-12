@@ -16,12 +16,13 @@ if (!$projectId) { http_response_code(400); echo json_encode(['error' => 'projec
 
 try {
     $project = new Project(getAppPDO());
-    if (!$project->findByIdAndUser($projectId, $userId)) {
+    $proj    = $project->findByIdAndUser($projectId, $userId);
+    if (!$proj) {
         http_response_code(404); echo json_encode(['error' => 'Project not found']); exit;
     }
     $chat  = new Chat(getAppPDO());
     $chats = $chat->getHistory($projectId, $limit);
-    echo json_encode(['chats' => $chats]);
+    echo json_encode(['chats' => $chats, 'project' => ['id' => $proj['id'], 'name' => $proj['name']]]);
 } catch (Exception $e) {
     http_response_code(500); echo json_encode(['error' => 'Server error']);
 }

@@ -57,7 +57,7 @@ angular.module('dbChatbot')
     vm.loadHistory = function() {
       chatService.getHistory(vm.projectId)
         .then(function(res) {
-          vm.messages = mapHistory(res.data.messages || []);
+          vm.messages = mapHistory(res.data.chats || []);
           vm.project  = res.data.project;
           highlightAll();
           scrollToBottom();
