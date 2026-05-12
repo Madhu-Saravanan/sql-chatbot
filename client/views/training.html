@@ -1,0 +1,140 @@
+<div class="chat-layout">
+
+  <!-- Sidebar -->
+  <aside class="chat-sidebar" ng-class="{'collapsed': !vm.sidebarOpen}">
+    <div class="sidebar-header">
+      <a href="#/dashboard" class="sidebar-brand">
+        <svg width="22" height="22" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="10" fill="#89b4fa"/>
+          <path d="M10 28l8-16 4 8 4-6 4 14" stroke="#1e1e2e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>DB Chatbot</span>
+      </a>
+    </div>
+    <div class="sidebar-body">
+      <nav class="sidebar-nav">
+        <a class="sidebar-link" href="#/project/{{ vm.projectId }}/chat">💬 Chat</a>
+        <a class="sidebar-link active" href="#/project/{{ vm.projectId }}/training">🧠 Training</a>
+        <a class="sidebar-link" href="#/dashboard">← Dashboard</a>
+      </nav>
+    </div>
+    <div class="sidebar-footer">
+      <span class="sidebar-user">{{ vm.user.name }}</span>
+      <button class="btn btn-sm btn-link" ng-click="vm.logout()">Sign out</button>
+    </div>
+  </aside>
+
+  <!-- Main: two-column training layout -->
+  <main class="training-main">
+    <div class="chat-topbar">
+      <button class="icon-btn" ng-click="vm.sidebarOpen = !vm.sidebarOpen">☰</button>
+      <span class="chat-title">Training Data</span>
+      <button class="btn btn-sm btn-outline-secondary ml-auto" ng-click="vm.exportPairs()">⬇ Export JSONL</button>
+    </div>
+
+    <div class="training-body">
+
+      <!-- Left: generation chat -->
+      <div class="training-chat-col">
+        <div class="training-chat-header">Generate Pairs</div>
+        <div class="chat-messages training-chat-messages" id="training-messages">
+          <div class="message-row" ng-repeat="msg in vm.chatMessages" ng-class="msg.role">
+            <div class="message-bubble">
+              <div class="msg-text">{{ msg.text }}</div>
+              <div class="sql-block" ng-if="msg.sql_query">
+                <div class="sql-block-header"><span>SQL</span></div>
+                <pre><code sql-highlight="{{ msg.sql_query }}"></code></pre>
+              </div>
+              <div class="msg-status-badge" ng-if="msg.status">
+                <span class="badge" ng-class="{
+                  'badge-warning': msg.status === 'pending',
+                  'badge-success': msg.status === 'approved',
+                  'badge-danger':  msg.status === 'rejected'
+                }">{{ msg.status }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="message-row bot" ng-if="vm.loading">
+            <div class="message-bubble">
+              <div class="typing-indicator"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-bar">
+          <textarea class="chat-input" ng-model="vm.inputMessage" ng-keydown="vm.handleKeydown($event)"
+            placeholder="Ask a question to generate SQL…" rows="1" ng-disabled="vm.loading"></textarea>
+          <button class="send-btn" ng-click="vm.generatePair()" ng-disabled="vm.loading || !vm.inputMessage.trim()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: review panel -->
+      <div class="training-review-col">
+        <div class="training-review-header">
+          <span>Review Pairs</span>
+          <select class="form-control form-control-sm filter-select" ng-model="vm.filterStatus" ng-change="vm.loadPairs()">
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+
+        <div class="training-pairs-list">
+          <div class="empty-state-sm" ng-if="vm.pairs.length === 0">No pairs yet.</div>
+
+          <div class="training-pair-card" ng-repeat="pair in vm.pairs"
+            ng-class="{'editing': vm.editingPair && vm.editingPair.id === pair.id}">
+
+            <!-- View mode -->
+            <div ng-if="!vm.editingPair || vm.editingPair.id !== pair.id">
+              <div class="pair-header">
+                <span class="badge" ng-class="{
+                  'badge-warning': pair.status === 'pending',
+                  'badge-success': pair.status === 'approved',
+                  'badge-danger':  pair.status === 'rejected'
+                }">{{ pair.status }}</span>
+                <span class="pair-date text-muted">{{ pair.created_at | date:'MMM d' }}</span>
+              </div>
+              <div class="pair-question">{{ pair.question }}</div>
+              <pre class="pair-sql"><code sql-highlight="{{ pair.sql_query }}"></code></pre>
+              <div class="pair-explanation text-muted" ng-if="pair.explanation">{{ pair.explanation }}</div>
+              <div class="pair-actions">
+                <button class="btn btn-xs btn-success" ng-click="vm.setStatus(pair, 'approved')" ng-if="pair.status !== 'approved'">✓ Approve</button>
+                <button class="btn btn-xs btn-danger"  ng-click="vm.setStatus(pair, 'rejected')" ng-if="pair.status !== 'rejected'">✗ Reject</button>
+                <button class="btn btn-xs btn-outline-secondary" ng-click="vm.startEdit(pair)">✎ Edit</button>
+              </div>
+            </div>
+
+            <!-- Edit mode -->
+            <div ng-if="vm.editingPair && vm.editingPair.id === pair.id">
+              <div class="form-group">
+                <label>Question</label>
+                <input type="text" class="form-control form-control-sm" ng-model="vm.editingPair.question" />
+              </div>
+              <div class="form-group">
+                <label>SQL Query</label>
+                <textarea class="form-control form-control-sm code-textarea" ng-model="vm.editingPair.sql_query" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Explanation</label>
+                <input type="text" class="form-control form-control-sm" ng-model="vm.editingPair.explanation" />
+              </div>
+              <div class="pair-actions">
+                <button class="btn btn-xs btn-primary" ng-click="vm.saveEdit()">Save</button>
+                <button class="btn btn-xs btn-outline-secondary" ng-click="vm.cancelEdit()">Cancel</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+</div>

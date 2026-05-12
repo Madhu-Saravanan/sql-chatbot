@@ -1,0 +1,65 @@
+<div class="modal fade" id="connectionModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ vm.modalMode === 'create' ? 'New Project' : 'Edit Project' }}</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group col-md-8">
+            <label>Project Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" ng-model="vm.connectionForm.name" placeholder="My Database" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" class="form-control" ng-model="vm.connectionForm.description" placeholder="Optional description" />
+        </div>
+
+        <hr class="modal-divider" />
+        <p class="section-label">Database Connection</p>
+
+        <div class="form-row">
+          <div class="form-group col-md-8">
+            <label>Host <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" ng-model="vm.connectionForm.db_host" placeholder="localhost" />
+          </div>
+          <div class="form-group col-md-4">
+            <label>Port</label>
+            <input type="number" class="form-control" ng-model="vm.connectionForm.db_port" placeholder="3306" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Database Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" ng-model="vm.connectionForm.db_name" placeholder="my_database" />
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label>Username</label>
+            <input type="text" class="form-control" ng-model="vm.connectionForm.db_user" placeholder="root" />
+          </div>
+          <div class="form-group col-md-6">
+            <label>Password</label>
+            <input type="password" class="form-control" ng-model="vm.connectionForm.db_password" placeholder="{{ vm.modalMode === 'edit' ? 'Leave blank to keep current' : 'Optional' }}" />
+          </div>
+        </div>
+
+        <div class="test-result" ng-if="vm.testResult">
+          <span class="badge" ng-class="vm.testResult.ok ? 'badge-success' : 'badge-danger'">
+            {{ vm.testResult.ok ? '✓' : '✗' }} {{ vm.testResult.message }}
+          </span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" ng-click="vm.testConnection()" ng-disabled="vm.testLoading">
+          <span ng-if="!vm.testLoading">Test Connection</span>
+          <span ng-if="vm.testLoading">Testing…</span>
+        </button>
+        <button type="button" class="btn btn-primary" ng-click="vm.saveProject()">
+          {{ vm.modalMode === 'create' ? 'Create Project' : 'Save Changes' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

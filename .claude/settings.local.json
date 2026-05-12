@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(composer install *)",
+      "PowerShell(& \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root -e \"SELECT VERSION\\(\\);\" 2>&1)",
+      "PowerShell($login = Invoke-RestMethod -Uri \"http://localhost/sql-chatbot/server/api/auth/login.php\" -Method POST -ContentType \"application/json\" -Body '{\"email\":\"test@example.com\",\"password\":\"password123\"}'; $token = $login.token; $headers = @{ Authorization = \"Bearer $token\" }; $conn = Invoke-RestMethod -Uri \"http://localhost/sql-chatbot/server/api/projects/test-connection.php\" -Method POST -ContentType \"application/json\" -Headers $headers -Body '{\"db_host\":\"127.0.0.1\",\"db_port\":3306,\"db_name\":\"sql_chatbot\",\"db_user\":\"root\",\"db_password\":\"\"}'; $conn | ConvertTo-Json)"
+    ]
+  }
+}

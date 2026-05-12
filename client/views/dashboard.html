@@ -1,0 +1,62 @@
+<div class="dashboard-layout">
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+        <rect width="40" height="40" rx="10" fill="#89b4fa"/>
+        <path d="M10 28l8-16 4 8 4-6 4 14" stroke="#1e1e2e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      DB Chatbot
+    </div>
+    <div class="nav-right">
+      <span class="nav-user">{{ vm.user.name }}</span>
+      <button class="btn btn-sm btn-outline-secondary" ng-click="vm.logout()">Sign out</button>
+    </div>
+  </nav>
+
+  <div class="dashboard-content">
+    <div class="dashboard-header">
+      <div>
+        <h1>Projects</h1>
+        <p class="text-muted">Connect a database and start chatting with your data.</p>
+      </div>
+      <button class="btn btn-primary" ng-click="vm.openCreateModal()">+ New Project</button>
+    </div>
+
+    <div class="loading-state" ng-if="vm.loading">
+      <div class="spinner"></div>
+    </div>
+
+    <div class="empty-state" ng-if="!vm.loading && vm.projects.length === 0">
+      <div class="empty-icon">🗄️</div>
+      <h3>No projects yet</h3>
+      <p>Create your first project to connect a database.</p>
+      <button class="btn btn-primary" ng-click="vm.openCreateModal()">Create Project</button>
+    </div>
+
+    <div class="projects-grid" ng-if="!vm.loading && vm.projects.length > 0">
+      <div class="project-card" ng-repeat="p in vm.projects">
+        <div class="project-card-header">
+          <div class="project-icon">🗄️</div>
+          <div class="project-status">
+            <span class="badge" ng-class="p.is_connected ? 'badge-success' : 'badge-secondary'">
+              {{ p.is_connected ? 'Connected' : 'Not connected' }}
+            </span>
+          </div>
+        </div>
+        <h3 class="project-name">{{ p.name }}</h3>
+        <p class="project-desc" ng-if="p.description">{{ p.description }}</p>
+        <p class="project-db" ng-if="p.db_name">
+          <span class="db-info">{{ p.db_user }}@{{ p.db_host }}/{{ p.db_name }}</span>
+        </p>
+        <div class="project-actions">
+          <button class="btn btn-primary btn-sm" ng-click="vm.goToChat(p.id)">Chat</button>
+          <button class="btn btn-outline-secondary btn-sm" ng-click="vm.goToTraining(p.id)">Training</button>
+          <button class="btn btn-outline-secondary btn-sm" ng-click="vm.openEditModal(p)">Edit</button>
+          <button class="btn btn-outline-danger btn-sm" ng-click="vm.deleteProject(p.id)">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div ng-include="'views/connection-modal.html'"></div>
+</div>
