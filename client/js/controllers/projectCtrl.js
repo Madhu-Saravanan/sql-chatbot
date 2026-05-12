@@ -29,7 +29,7 @@ angular.module('dbChatbot')
     vm.loadProjects = function() {
       vm.loading = true;
       projectService.getProjects()
-        .then(function(res) { vm.projects = res.data; })
+        .then(function(res) { vm.projects = res.data.projects || res.data; })
         .catch(function() { $rootScope.showToast('Failed to load projects', 'danger'); })
         .finally(function() { vm.loading = false; });
     };

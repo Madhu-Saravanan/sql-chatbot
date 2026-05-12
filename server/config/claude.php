@@ -1,14 +1,18 @@
 <?php
 
 function callClaude(string $systemPrompt, array $messages): array {
+    $msgs = array_merge(
+        [['role' => 'system', 'content' => $systemPrompt]],
+        $messages
+    );
+
     $body = json_encode([
-        'model'      => getenv('ANTHROPIC_MODEL') ?: 'claude-sonnet-4-20250514',
-        'max_tokens' => (int)(getenv('ANTHROPIC_MAX_TOKENS') ?: 2048),
-        'system'     => $systemPrompt,
-        'messages'   => $messages,
+        'model'      => getenv('OPENAI_MODEL') ?: 'gpt-4o',
+        'max_tokens' => (int)(getenv('OPENAI_MAX_TOKENS') ?: 2048),
+        'messages'   => $msgs,
     ]);
 
-    $ch = curl_init('https://api.anthropic.com/v1/messages');
+    $ch = curl_init('https://api.openai.com/v1/chat/completions');
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST           => true,
@@ -16,8 +20,7 @@ function callClaude(string $systemPrompt, array $messages): array {
         CURLOPT_TIMEOUT        => 90,
         CURLOPT_HTTPHEADER     => [
             'Content-Type: application/json',
-            'x-api-key: ' . getenv('ANTHROPIC_API_KEY'),
-            'anthropic-version: 2023-06-01',
+            'Authorization: Bearer ' . getenv('OPENAI_API_KEY'),
         ],
     ]);
 
@@ -26,17 +29,17 @@ function callClaude(string $systemPrompt, array $messages): array {
     curl_close($ch);
 
     if ($curlError) {
-        throw new RuntimeException('Claude API cURL error: ' . $curlError);
+        throw new RuntimeException('OpenAI API cURL error: ' . $curlError);
     }
 
     $data = json_decode($response, true);
     if (isset($data['error'])) {
-        throw new RuntimeException('Claude API error: ' . $data['error']['message']);
+        throw new RuntimeException('OpenAI API error: ' . $data['error']['message']);
     }
 
     return [
-        'content'       => $data['content'][0]['text'],
-        'input_tokens'  => $data['usage']['input_tokens'],
-        'output_tokens' => $data['usage']['output_tokens'],
+        'content'       => $data['choices'][0]['message']['content'],
+        'input_tokens'  => $data['usage']['prompt_tokens'],
+        'output_tokens' => $data['usage']['completion_tokens'],
     ];
 }
